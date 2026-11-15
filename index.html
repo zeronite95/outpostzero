@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outpost Zero: run a Moon or Mars base</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#12151c;--card:#1c212d;--card2:#242b3a;--ink:#ece6d8;--mute:#9aa0b0;--line:#323a4e;--pow:#ffbf47;--o2:#5ccbf5;--food:#8fdc6e;--rad:#ff7a66;--hp:#c9a0ff;--acc:#ff9b54;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 70% -10%,#26304a 0,var(--bg) 60%);background-color:var(--bg);color:var(--ink);font:16px/1.5 "Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}
+h1{font-size:clamp(2rem,7vw,3.4rem);line-height:1.05;margin:.2em 0;letter-spacing:-.02em}
+h2{font-size:1.15rem;margin:0 0 .5rem}
+p{margin:.4em 0}
+.mute{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+button{font:inherit;color:inherit;cursor:pointer}
+.pick{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:left;transition:border-color .15s,transform .15s}
+.pick:hover,.pick:focus-visible{border-color:var(--acc);transform:translateY(-2px);outline:none}
+.pick b{font-size:1.25rem;display:block}
+.go{background:var(--acc);color:#1a1208;border:0;border-radius:12px;padding:13px 20px;font-weight:700;font-size:1.05rem;width:100%}
+.go:disabled{opacity:.4;cursor:not-allowed}
+.go:focus-visible,.step:focus-visible{outline:3px solid var(--o2);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sol{font-size:1.6rem;font-weight:700}
+.fc{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.fc div{flex:0 0 auto;background:var(--card2);border-radius:10px;padding:6px 10px;font-size:.9rem;white-space:nowrap}
+.fc .now{border:1px solid var(--acc)}
+.g{display:grid;grid-template-columns:7.5rem 1fr 4.5rem;gap:8px;align-items:center;margin:7px 0;font-size:.95rem}
+.bar{height:12px;background:#0c0f15;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .4s}
+.val{text-align:right;font-variant-numeric:tabular-nums}
+.low .val{color:var(--rad);font-weight:700}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row small{display:block;color:var(--mute);line-height:1.3}
+.ctl{display:flex;align-items:center;gap:10px}
+.step{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card2);font-size:1.3rem}
+.ctl b{min-width:1.4em;text-align:center;font-size:1.2rem}
+.log p{margin:.5em 0;padding-left:10px;border-left:3px solid var(--line)}
+.log .bad{border-color:var(--rad)}.log .good{border-color:var(--food)}
+.log em{display:block;color:var(--o2);font-size:.9rem}
+label.sh{display:flex;gap:10px;align-items:flex-start;background:#3a2420;border:1px solid var(--rad);border-radius:10px;padding:10px;margin-bottom:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+.stats div{background:var(--card2);border-radius:10px;padding:10px}
+.stats b{display:block;font-size:1.5rem}
+ul{padding-left:1.2em}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--acc);color:#1a1208;padding:10px 16px;border-radius:12px;font-weight:700;max-width:92vw;opacity:0;pointer-events:none;transition:.3s;z-index:20}#toast.show{opacity:1;transform:translate(-50%,0)}
+#scene{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+.coach{border-color:var(--acc);background:#2a2420}.tut label.sh{display:none}
+.ach{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.ach div{background:var(--card2);border-radius:10px;padding:8px;opacity:.5}.ach div.on{opacity:1;border:1px solid var(--pow)}.ach span{font-size:1.6rem;display:block}.ach small{display:block;color:var(--mute);line-height:1.3}
+.pm{position:fixed;inset:0;background:rgba(8,10,16,.82);display:grid;place-items:center;padding:16px;z-index:30}.pm .card{max-width:380px;width:100%;display:grid;gap:10px;margin:0}.ghost{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:700;width:100%}.ghost:focus-visible{outline:3px solid var(--o2)}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}.lv{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:left}.lv b{display:block}.lv small{display:block;color:var(--mute)}.lv span{color:var(--pow)}.lv.lock{opacity:.45;cursor:not-allowed}.lv.cur{border-color:var(--acc)}.lv:not(.lock):hover{border-color:var(--acc)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body><main style="padding-bottom:0"><canvas id="scene" width="800" height="200" role="img" aria-label="Animated view of your base"></canvas></main><main id="app"></main><div id="toast" role="status"></div>
+<main style="padding-top:0"><details class="card"><summary><b>Where the science comes from</b></summary>
+<ul><li><b>Solar flares:</b> each flare in the game is a real one from NASA’s DONKI space-weather records (date and class are real). This is an archived list built into the game, not a live feed. The radiation points are scaled for play.</li><li><b>Radiation per day:</b> about 1.4 mSv on the Moon’s surface (Chang’e-4 lander measurements, published 2020), about 0.7 mSv on Mars (NASA Curiosity rover RAD instrument), and about 0.007 mSv on Earth. A mSv (millisievert) measures how much radiation your body absorbs.</li><li><b>Radio delay:</b> about 1.3 seconds one way to the Moon, 4 to 24 minutes to Mars.</li><li><b>Dust storms:</b> a 2018 Mars dust storm ended NASA’s Opportunity rover mission.</li><li><b>A sol</b> is one day on the base. On Mars it lasts 24 hours 39 minutes.</li><li><b>Simplified for play:</b> oxygen, food, power and crew numbers are made up to keep the game easy to learn.</li><li><b>Next step:</b> pull live flares from api.nasa.gov/DONKI/FLR once the game is hosted somewhere that allows network calls.</li></ul></details></main>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const LOC={
+ moon:{name:'The Moon, south pole rim',rad:6,icon:'🌙',blurb:'Sunlight is strong, but the lunar night lasts about 14 Earth days with zero solar power. Almost no atmosphere or magnetic field, so radiation is harsh: about 1.4 millisieverts (mSv) a day, roughly 200 times more than on Earth. Radio messages to Earth take only 1.3 seconds.',night:'🌑 Lunar night: no solar'},
+ mars:{name:'Mars, Jezero crater',rad:4,icon:'🔴',blurb:'Sunlight is weaker, and global dust storms can block it for days. A thin atmosphere gives a little radiation protection: NASA’s Curiosity rover measured about 0.7 mSv a day. A radio message takes 4 to 24 minutes one way.',night:'🌪️ Dust storm: solar down'}};
+const FACT={
+ flare:'Solar flares can send bursts of high-energy particles. Real crews would shelter in the most heavily shielded room, often one packed with supplies or water.',
+ dark:'Moon bases near the poles pick spots with long sunlight, but can’t escape the night. Batteries or small nuclear reactors cover the gap.',
+ dust:'Mars dust storms can cut sunlight to a small fraction. Opportunity rover was lost to one in 2018.',
+ scrub:'Equipment fails. Spare parts and crew time on life support are what separate a repair from an emergency.',
+ meteor:'Tiny meteoroids hit at tens of thousands of km/h. Thick regolith layers over habitats help absorb them and block radiation.',
+ shield:'Regolith (moon or Martian soil) piled over a habitat is a cheap way to reduce radiation using local materials.'};
+let PW=0;
+const ACH=[['tut','🎓','Trainee','Finish the training mission','+10 starting battery'],['pow','⚡','Power Pro','Charge the battery to 140 or more','+20 starting battery'],['green','🌱','Green Thumb','Get food to 100','+15 starting food'],['mole','🧱','Mole Builder','Build 3 shield layers','Start with 1 shield layer'],['flare','☀️','Flare Survivor','Shelter during a real solar flare','Shelter lets 4 crew keep working'],['sci','🔬','Scientist','Earn 100 science points','Science gives 12 points per crew'],['win','🏆','Mission Hero','Finish a full mission','Scrubber failures hurt 3 less'],['quiz','🧠','Space Brain','Score 3 of 3 on a level quiz','+10 starting oxygen']];
+let AU=new Set();try{AU=new Set(JSON.parse(localStorage.getItem('oz-ach')||'[]'))}catch(e){}
+function unlock(id){if(AU.has(id))return;AU.add(id);try{localStorage.setItem('oz-ach',JSON.stringify([...AU]))}catch(e){}pushCloud();const a=ACH.find(x=>x[0]==id);toast(a[1]+' Badge unlocked: '+a[2]+'! Perk for your next mission: '+a[4])}
+function achHTML(){return `<div class="card"><h2>Badges and perks</h2><div class="ach">${ACH.map(a=>`<div class="${AU.has(a[0])?'on':''}"><span>${a[1]}</span><b>${a[2]}</b><small>${AU.has(a[0])?'Perk: '+a[4]:a[3]}</small></div>`).join('')}</div></div>`}
+const TUT_O={tasks:['p','l','f','c']};
+function startTut(){start('moon',3,true,TUT_O,0)}
+function dalloc(t){if(!t)return{p:1,l:1,f:1,s:1,c:1};const a={p:0,l:0,f:0,s:0,c:0};for(let i=0;i<6;i++)a[t[i%t.length]]++;return a}
+const LV=[
+{ico:'🎓',name:'Training',short:'Learn how power works.',tut:1},
+{ico:'💨',name:'First Light',short:'New: air and food.',k:'moon',N:8,o:{tasks:['p','l','f'],fl:0,fa:0,hi:0,nt:[99,99]},new:'Air and food. Every astronaut breathes and eats, so you need crew on life support and the greenhouse as well as power.'},
+{ico:'🧱',name:'Dig In',short:'New: radiation and shielding.',k:'moon',N:10,o:{tasks:['p','l','f','s'],fl:0,fa:1,hi:1,nt:[99,99]},new:'Radiation. Invisible energy from space builds up in the crew. Pile soil over the base: each layer blocks 13%. Watch out, equipment can also break without warning.'},
+{ico:'🌑',name:'The Long Night',short:'New: lunar night.',k:'moon',N:14,o:{tasks:['p','l','f','s'],fl:0,fa:1,hi:1,nt:[5,9]},new:'Lunar night. The Moon has about 14 Earth days of darkness (we use 5 sols). Panels make no power, so charge the battery before the sun goes down.'},
+{ico:'🔬',name:'Science Time',short:'New: science goals.',k:'moon',N:14,o:{goal:70,fl:0,fa:2,hi:1,nt:[7,10]},new:'Science. Scientists earn mission points but use crew time and power. Earn the goal points to pass, and keep everyone alive.'},
+{ico:'☀️',name:'Flare Alert',short:'New: real solar flares.',k:'moon',N:16,o:{goal:45,fl:3,fa:2,hi:2,nt:[8,12]},new:'Solar flares. These are real flares from NASA records. Check the forecast. You can shelter, but only 3 crew can work that sol.'},
+{ico:'🔴',name:'Red Planet',short:'New: Mars and radio delay.',k:'mars',N:18,o:{goal:70,st:[7],fl:2,fa:2,hi:2},new:'Mars. Sunlight is weaker and dust storms block it. Earth is 4 to 24 minutes away by radio, so help for a breakdown comes too late.'},
+{ico:'🌪️',name:'Storm Season',short:'Three dust storms.',k:'mars',N:22,o:{goal:30,st:[4,11,17],fl:2,fa:2,hi:2},new:'Three dust storms and a bigger science goal. Plan your power before each storm hits.'},
+{ico:'🚀',name:'Commander',short:'Everything at once.',k:'mars',N:30,o:{goal:70,st:[5,13,22],fl:6,fa:4,hi:4},new:'The final test. Six flares, three storms, more breakdowns and a big science goal. Use everything you have learned.'},
+{ico:'🏆',name:'Deep Space',short:'The ultimate test. Pick the Moon or Mars to unlock a guide.',fin:1}];
+let PR={};try{PR=JSON.parse(localStorage.getItem('oz-prog')||'{}')}catch(e){}
+PR.u=Math.max(PR.u||0,1);PR.s=PR.s||{};
+function save(i,st){PR.u=Math.max(PR.u,i+1);PR.s[i]=Math.max(PR.s[i]||0,st);try{localStorage.setItem('oz-prog',JSON.stringify(PR))}catch(e){}pushCloud()}
+function mapHTML(){return '<div class="card"><h2>Campaign</h2><p class="mute">Ten levels, starting with a short training. Each one adds something new and gets harder. Win a level to unlock the next.</p><div class="map">'+LV.map((l,i)=>{const open=i<=PR.u,st=PR.s[i]||0;return `<button class="lv ${open?'':'lock'} ${i==PR.u?'cur':''}" data-i="${i}" ${open?'':'disabled'}><b>${open?l.ico:'🔒'} ${i+1}. ${l.name}</b><small>${open?l.short:'Locked'}</small><span>${'★'.repeat(st)}${'☆'.repeat(3-st)}${(PR.q||{})[i]==3?' 🧠':''}</span></button>`}).join('')+'</div></div>'}
+let ACC=null,CDOC=null;
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function acctInner(){return ACC?'👤 <b>Signed in as '+esc(ACC.name||'Player')+'</b><br><span class="mute">Your levels, stars, badges and guide access are saved to your account on any device.</span>':'👤 <b>Playing as a guest</b><br><span class="mute">Progress is saved in this browser only.</span>'}
+function acctHTML(){return '<div class="card" id="acct">'+acctInner()+'</div>'}
+function pushCloud(){if(!CDOC)return;try{CDOC.set({u:PR.u,s:PR.s,g:PR.g?1:0,m:PR.m?1:0,q:PR.q||{},ach:[...AU],t:Date.now()}).catch(()=>{})}catch(e){}}
+async function initAcct(){try{if(!window.claude||!claude.use)return;const user=await claude.use('user'),db=await claude.use('db');if(!user||!db)return;const id=await user.id();if(!id)return;const me=await user.me();ACC={id,name:me&&me.name};CDOC=db.collection('data/users/'+id).doc('save');
+ const snap=await CDOC.get(),d=snap.exists?snap.data():null;
+ if(d){PR.u=Math.max(PR.u,d.u||0);for(const k in(d.s||{}))PR.s[k]=Math.max(PR.s[k]||0,d.s[k]);if(d.g)PR.g=1;if(d.m)PR.m=1;PR.q=PR.q||{};for(const k in(d.q||{}))PR.q[k]=Math.max(PR.q[k]||0,d.q[k]);(d.ach||[]).forEach(a=>AU.add(a))}
+ try{localStorage.setItem('oz-prog',JSON.stringify(PR));localStorage.setItem('oz-ach',JSON.stringify([...AU]))}catch(e){}
+ pushCloud();const el=$('#acct');if(el)el.innerHTML=acctInner();if(!S&&$('.map'))render()}catch(e){}}
+const GD=[['🌌 What is space?','Space starts about 100 km above the ground. There is almost no air up there, so there is no sound and nothing to breathe. Space is mostly empty, with stars, planets, moons and clouds of gas very far apart.'],
+['☀️ Our Solar System','The Sun is a star, and it holds about 99.8% of all the mass in our solar system. Eight planets travel around it: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune. Sunlight takes about 8 minutes to reach Earth and about 13 minutes to reach Mars.'],
+['🌙 The Moon','The Moon is about 384,400 km away. Its gravity is about one-sixth of Earth’s, so you could jump much higher. It has almost no air. One full day and night lasts about 29.5 Earth days, so the night lasts about two weeks. Humans first walked there in 1969 on Apollo 11.'],
+['🔴 Mars','Mars is about half as wide as Earth, with gravity about 38% of Earth’s. Its air is very thin and mostly carbon dioxide, so you could not breathe it. The average temperature is about −60°C. A sol (Mars day) is 24 hours 39 minutes, and a Mars year lasts 687 Earth days. A trip there takes around 6 to 9 months.'],
+['💨 Staying alive','Astronauts need air, water, food and power. Nothing can be bought nearby, so everything is recycled as much as possible. The International Space Station recycles much of its water, even moisture from the air. Every system uses power, so planners always balance them, just like in Outpost Zero.'],
+['☢️ Radiation and space weather','Earth’s air and magnetic field protect us from most space radiation. On the Moon and Mars there is far less protection, so bases use thick layers of soil or water. The Sun also throws out flares and storms, which NASA tracks in a database called DONKI. About 1.4 millisieverts of radiation reach the Moon’s surface each day, compared with about 0.007 on Earth.'],
+['📡 Talking to Earth','Radio waves travel at the speed of light, about 300,000 km every second. A message takes about 1.3 seconds to reach the Moon, but 4 to 24 minutes to reach Mars. That is why Mars rovers must make some decisions by themselves.'],
+['🧑‍🚀 Floating in space','Astronauts on the space station are not beyond gravity. They are falling around Earth, about 400 km up, at roughly 28,000 km/h, so they circle the planet about every 90 minutes. Without gravity, bones and muscles weaken. Real crews exercise around two hours a day.'],
+['🚀 How rockets work','A rocket pushes hot gas down, and the gas pushes the rocket up. To stay in orbit, a spacecraft needs about 28,000 km/h of sideways speed. That takes so much fuel that most of a rocket is fuel tanks.'],
+['🌟 What to explore next','Space needs engineers, doctors, farmers, geologists, programmers and more. Try NASA Space Place and Eyes on the Solar System online, and keep asking questions. You already know how to run a base: now go learn more.']];
+const GM=[['🚀 Getting to Mars','Earth and Mars line up well for a trip only about every 26 months. These launch windows decide when missions leave. The flight takes roughly 6 to 9 months along a curved path called a transfer orbit, which saves fuel compared with flying straight.'],
+['⛽ Delta-v: the speed budget','Every burn of a rocket changes its speed. The total change a mission can make is called delta-v. Reaching low Earth orbit alone needs about 9.4 km/s. Fuel has weight and carrying fuel needs more fuel, so every extra kilogram on a spacecraft is expensive.'],
+['🔥 Entry, descent and landing','Mars air is mostly carbon dioxide and its pressure is under 1% of Earth’s. That is too thin for parachutes alone but thick enough to heat a capsule hard. Perseverance used a heat shield, a parachute, rockets and a sky crane in about seven tense minutes while nobody on Earth could steer it.'],
+['🏜️ The Mars environment','Mars has about 38% of Earth’s gravity and a sol of 24 hours 39 minutes. Average temperatures are around −60°C. Dust storms can cover the planet for weeks. Perseverance explores Jezero crater, an ancient lake bed.'],
+['🧪 Making things on Mars','Using local materials is called in-situ resource use. The MOXIE experiment on Perseverance made oxygen from Mars carbon dioxide, about 122 grams in total, proving the idea can work. Water ice below the surface and regolith for shielding and bricks are other possible resources.'],
+['♻️ Recycling life support','Resupply from Earth takes many months, so crews must recycle air and water and repair equipment themselves. The space station already recovers about 98% of its water. A Mars crew needs spare parts and the skills to fix things, which is why your life-support crew matters in the game.'],
+['🔋 Power on Mars','Mars gets about 43% of the sunlight Earth does, and dust can cover solar panels. Missions also use nuclear power: Perseverance carries a radioisotope power system, and small fission reactors are being studied for bases. Batteries cover storms and night.'],
+['☢️ Radiation on the way and on arrival','Curiosity’s instrument measured about 1.8 mSv per day in deep space on the way to Mars and about 0.7 mSv per day on the surface. A round trip adds up to hundreds of millisieverts. Shielding with soil, water or even supplies is one of the biggest design problems.'],
+['📡 Talking to Earth','Radio messages take 4 to 24 minutes one way, so there is no live chat. Orbiters around Mars relay data, and the Deep Space Network on Earth listens. About every 26 months the Sun blocks the signal for around two weeks. Crews must be able to decide and act on their own.'],
+['⚖️ Everything is a trade-off','Mass, power, time, safety and money are always limited. More science means less margin. More shielding means fewer hours for other jobs. Planners balance these choices just like you did in Outpost Zero. To keep exploring, look at NASA’s DONKI space weather database and the Mars rover photo galleries.']];
+function guideHTML(k){const M=k=='m',L=M?GM:GD;return '<h1>📘 Space '+(M?'Intermediate':'Beginner’s')+' Guide</h1><div class="card coach"><h2>🏅 Deep Space Commander</h2><p>You beat the hardest level on '+(M?'Mars':'the Moon')+'. Here is your guide to how space really works.</p></div>'+L.map((c,i)=>`<details class="card" ${i==0?'open':''}><summary><b>${c[0]}</b></summary><p>${c[1]}</p></details>`).join('')+'<button class="go" id="gbk">Back to main menu</button>'}
+function showGuide(k){S=null;app.innerHTML=guideHTML(k);$('#gbk').onclick=()=>{S=null;render()};window.scrollTo(0,0)}
+function guideCard(){return '<div class="card"><h2>📚 Space Library</h2><p class="mute">Beat Level 10 to unlock a guide. Win on the Moon for the Beginner’s Guide. Win on Mars for the Intermediate Guide.</p><div class="grid">'+(PR.g?'<button class="go" id="og">📘 Beginner’s Guide</button>':'<button class="ghost" disabled>🔒 Beginner’s Guide (win Level 10 on the Moon)</button>')+(PR.m?'<button class="go" id="om">📗 Intermediate Guide</button>':'<button class="ghost" disabled>🔒 Intermediate Guide (win Level 10 on Mars)</button>')+'</div></div>'}
+const QZ=[
+[['You add crew to Science. What happens to your power budget?','Power gets tighter','Power goes up','Nothing changes','Science uses crew time and power, so less is left over.'],['Why did night matter on sol 3?','Panels make almost no power at night','Astronauts need sleep','The Moon gets heavier','Solar panels need sunlight, so night is a power problem.'],['What keeps a base running in the dark?','A battery you charged earlier','Power sent from Earth','Nothing, it just stops','Batteries (or a small reactor) carry the base through night.']],
+[['Why does a base need crew on life support?','To make oxygen and remove CO₂','To decorate the base','To talk to Earth','Machines that scrub CO₂ and make oxygen need people to run and fix them.'],['What does the greenhouse crew do?','Grow food','Make power','Build shields','Food has to be grown or brought, and a base cannot easily shop.'],['What happens when oxygen reaches zero?','Crew health drops fast','Nothing','Power goes up','People can only survive minutes without air.']],
+[['What is space radiation?','Invisible energy that can damage body cells','A kind of space rock','A strong wind','It comes from the Sun and deep space, and you cannot see or feel it.'],['How do shield layers help?','Soil over the base blocks radiation','They make oxygen','They store power','Regolith (soil) is a cheap shield made from local materials.'],['Why should you start shielding early?','It protects every sol after it is built','It is free','Then crew need no other jobs','Shielding takes crew time up front but pays off for the whole mission.']],
+[['About how long is the Moon\u2019s night?','About 14 Earth days','About 14 minutes','Less than an hour','The Moon turns slowly, so day and night each last about two weeks.'],['What is the best move before night?','Charge the battery','Spend all power on science','Turn off life support','You cannot make solar power in the dark, so bank it first.'],['Why do solar panels stop working at night?','There is no sunlight to turn into power','They break','They fall off','Panels convert sunlight, so no light means no power.']],
+[['What does science cost?','Crew time and power','Nothing','Only oxygen','Every job uses crew hours, and experiments use power too.'],['Why is a science goal a trade-off?','Crew on science cannot do survival jobs','Science harms the base','Goals are random','There are only six crew, so each hour goes to one job.'],['Where do real space station crews do experiments?','In microgravity aboard the station','Only on Earth','Only on the Moon','The station is a lab where weightlessness lets scientists study things differently.']],
+[['What is a solar flare?','A burst of energy from the Sun','A kind of comet','A Moon crater','Flares send radiation and particles into space.'],['What does NASA\u2019s DONKI database record?','Space weather like flares and storms','Rocket prices','Moon maps','The flares in this game come from DONKI records.'],['What does sheltering during a flare cost you?','Fewer crew can work that sol','Oxygen','Nothing','Sheltering is safer, but people in the shelter are not working.']],
+[['How long does a radio message from Mars take to reach Earth?','4 to 24 minutes','1.3 seconds','About a day','It depends on where the planets are in their orbits.'],['Why must a Mars crew fix problems alone?','Help from Earth arrives too late','Earth does not care','Radios do not work','With a delay of many minutes, a live chat is not possible.'],['What is a sol?','One day on a base (24 h 39 min on Mars)','A kind of rock','A Mars year','Sol is the word for a Martian day.']],
+[['What do Mars dust storms do to a base?','Block sunlight so panels make less power','Make Mars warmer to live','Stop radiation','Dust in the air dims the Sun, and can coat solar panels.'],['Which NASA rover\u2019s mission ended after a 2018 dust storm?','Opportunity','Curiosity','Perseverance','Opportunity lost power during a huge global dust storm.'],['What is the best prep before a storm?','Bank battery power','Ignore it','Spend the battery on science','Forecasts give you time to charge up.']],
+[['Why can\u2019t you max out every job at once?','There are only six crew, so each hour is a trade-off','The game is broken','Jobs do not matter','Real missions also have limited crew time, power and mass.'],['About how much radiation reaches the Mars surface each day?','About 0.7 mSv','About 70 mSv','None','NASA\u2019s Curiosity rover measured around that amount.'],['Compared with Earth, Moon surface radiation is about...','200 times higher','The same','Slightly lower','Earth\u2019s air and magnetic field protect us, the Moon has neither.']],
+[['What is the big lesson of mission planning?','Mass, power, time and safety are always limited','Resources are unlimited','Only luck matters','Every choice gives up something else.'],['Why do real crews rely on recycling?','Resupply from Earth takes months','Recycling is fun','Rockets are free','The space station already recovers about 98% of its water.'],['What helps against radiation?','Thick layers of soil or water','Thin curtains','More science','Mass between you and space blocks radiation.']]];
+let QS=null;
+function quiz(i){QS={i,n:0,ok:0,qs:QZ[i].map(x=>({q:x[0],e:x[4],o:[x[1],x[2],x[3]].map((t,k)=>({t,c:k==0})).sort(()=>Math.random()-.5)}))};qshow()}
+function qshow(){const q=QS.qs[QS.n];app.innerHTML=`<h1>🧠 Quick quiz</h1><p class="mute">Level ${QS.i+1}, ${LV[QS.i].name}: question ${QS.n+1} of ${QS.qs.length}</p><div class="card"><h2>${q.q}</h2>${q.o.map((o,k)=>`<button class="ghost qo" data-k="${k}" style="margin-top:8px;text-align:left">${o.t}</button>`).join('')}</div><div id="qf"></div>`;
+ document.querySelectorAll('.qo').forEach(b=>b.onclick=()=>{const o=q.o[+b.dataset.k];document.querySelectorAll('.qo').forEach(x=>{x.disabled=true;if(q.o[+x.dataset.k].c)x.style.borderColor='var(--food)';else if(x===b)x.style.borderColor='var(--rad)'});if(o.c)QS.ok++;$('#qf').innerHTML='<p>'+(o.c?'\u2705 Correct! ':'\u274c Not quite. ')+q.e+'</p><button class="go" id="qn">'+(QS.n<QS.qs.length-1?'Next question':'See my score')+'</button>';$('#qn').onclick=()=>{QS.n++;QS.n<QS.qs.length?qshow():qdone()}})}
+function qdone(){const i=QS.i,ok=QS.ok,n=QS.qs.length;PR.q=PR.q||{};PR.q[i]=Math.max(PR.q[i]||0,ok);try{localStorage.setItem('oz-prog',JSON.stringify(PR))}catch(e){}pushCloud();if(ok==n)unlock('quiz');
+ app.innerHTML=`<h1>${ok==n?'Perfect score! 🌟':'Quiz done'}</h1><p style="font-size:2rem;margin:0">${ok} / ${n}</p><p class="mute">${ok==n?'You really know your space!':'Good try. Replay the level any time to learn more.'}</p><div class="grid">${i<LV.length-1?'<button class="go" id="qx">Next level</button>':''}<button class="ghost" id="qm">Main menu</button></div>`;
+ if($('#qx'))$('#qx').onclick=()=>playLevel(i+1);$('#qm').onclick=()=>{S=null;render()};window.scrollTo(0,0)}
+const FM={goal:70,nt:[5,11],fl:6,fa:4,hi:4,fin:'moon'},FR={goal:50,st:[5,13,22,29],fl:6,fa:4,hi:4,fin:'mars'};
+function finIntro(){S=null;app.innerHTML='<h1>Level 10: Deep Space</h1><div class="card coach"><h2>🏆 The hardest level</h2><p>36 sols, six real solar flares, frequent breakdowns, tight supplies and a big science goal. Choose your world. Win on the Moon to unlock the Space Beginner’s Guide. Win on Mars to unlock the Intermediate Guide.</p></div><button class="go" id="fm">🌙 Moon: Beginner’s Guide</button><button class="go" id="fr" style="margin-top:8px">🔴 Mars: Intermediate Guide</button><button class="ghost" id="gb" style="margin-top:8px">Back to level map</button>';
+ $('#fm').onclick=()=>start('moon',36,false,FM,9);$('#fr').onclick=()=>start('mars',36,false,FR,9);$('#gb').onclick=()=>{S=null;render()}}
+function playLevel(i){const l=LV[i];if(l.tut){startTut();return}if(l.fin){finIntro();return}S=null;
+ app.innerHTML=`<h1>Level ${i+1}: ${l.name}</h1><div class="card coach"><h2>✨ New in this level</h2><p>${l.new}</p></div><p class="mute">${LOC[l.k].icon} ${LOC[l.k].name}, ${l.N} sols.${l.o.goal?' Goal: earn '+l.o.goal+' science points.':''} Keep all six crew alive.</p><button class="go" id="gl">Start level ${i+1}</button><button class="ghost" id="gb" style="margin-top:8px">Back to level map</button>`;
+ $('#gl').onclick=()=>start(l.k,l.N,false,l.o,i);$('#gb').onclick=()=>{S=null;render()}}
+let SK=false;
+function ask(k,n,m){const o=m=='flare'?{fl:7}:m=='storm'?{st:[3,9,15]}:{};if(AU.has('tut')||SK){start(k,n,false,o);return}
+ app.innerHTML='<h1>Want a quick training first?</h1><p class="mute">It takes 3 sols and teaches the main idea: power is shared between jobs. It is optional, and you can play it later from the main menu.</p><button class="go" id="y">🎓 Yes, train me first</button><button class="ghost" id="n" style="margin-top:8px">No thanks, start the mission</button><button class="ghost" id="b" style="margin-top:8px">Back</button>';
+ $('#y').onclick=()=>startTut();$('#n').onclick=()=>{SK=true;start(k,n,false,o)};$('#b').onclick=()=>{S=null;render()}}
+function pauseHTML(){return '<div class="pm" role="dialog" aria-label="Paused"><div class="card"><h2>⏸ Game paused</h2><p class="mute">Your base is safe. Nothing happens until you resume. Restarting or leaving ends this mission.</p><button class="go" id="rs">Resume</button><button class="ghost" id="rt">Restart this mission</button><button class="ghost" id="mm">Back to main menu</button></div></div>'}
+function coach(){const t=['<b>Training, sol 1 of 3: power.</b> Solar panels only make power if crew look after them. Right now the expected power change is below zero, so the battery would drain. Press + on ⚡ Power until power shows a plus sign, then run the sol.','<b>Sol 2: nothing is free.</b> Science earns mission points, but it costs crew time and power. Press + on 🔬 Science and watch the power number fall. Then run the sol.','<b>Sol 3: night is coming!</b> Sunlight is 0% tonight, so panels make almost nothing. The battery you saved keeps the base alive. Choose how to use your crew, then run the last training sol.'];return `<div class="card coach"><h2>🎓 Mission coach</h2><p>${t[S.sol-1]}</p></div>`}
+const FL=[{c:'X5.8',d:'11 May 2024',p:22,f:'Real flare from NASA DONKI records. It was part of the May 2024 storms that put auroras in the sky far from the poles.'},{c:'X9.0',d:'3 Oct 2024',p:32,f:'Real flare from NASA DONKI records, one of the strongest of the current solar cycle.'},{c:'X9.3',d:'6 Sep 2017',p:33,f:'Real flare from NASA DONKI records, the biggest of a series in September 2017.'},{c:'X17',d:'28 Oct 2003',p:45,f:'Real flare from NASA DONKI records, one of the Halloween 2003 storms. ISS astronauts moved to a shielded area.'}];
+let S;
+const rnd=(n,a,b)=>{const s=new Set();while(s.size<n)s.add(a+Math.floor(Math.random()*(b-a+1)));return[...s]};
+function start(k,n,tut,o,lv){o=o||{};S={k,N:n,tut,o,lv,sol:1,bat:tut?90:100+(AU.has('pow')?20:0)+(AU.has('tut')?10:0),o2:(tut?80:(lv!=null?82-lv*3:65))+(AU.has('quiz')?10:0),food:tut?80:(lv!=null?82-lv*3:65)+(AU.has('green')?15:0),rad:0,lvl:tut?0:AU.has('mole')?1:0,prog:0,hp:100,sci:0,sh:false,log:[],over:null,
+ a:tut?{p:0,l:2,f:1,s:0,c:0}:dalloc(o.tasks),flares:tut?[]:rnd(o.fl==null?4:o.fl,3,n-1),fails:tut?[]:rnd(o.fa==null?3:o.fa,2,n-1),hits:tut?[]:rnd(o.hi==null?3:o.hi,2,n-1),storms:o.st||(k=='mars'?[rnd(1,6,10)[0],rnd(1,17,22)[0]]:[])};
+ const ev=[...FL].sort(()=>Math.random()-.5);S.fev={};S.flares.forEach((s,i)=>S.fev[s]=ev[i%4]);render()}
+function solar(n){if(S.tut)return n==3?0:1;if(S.k=='moon'){const t=S.o.nt||[11,16];return n>=t[0]&&n<=t[1]?0:1};return S.storms.some(s=>n>=s&&n<s+4)?.2:.75}
+function fc(n){const t=[];if(solar(n)<.5)t.push(LOC[S.k].night);if(S.flares.includes(n))t.push('☀️ Solar flare ('+S.fev[n].c+')');return t.length?t.join(' + '):'✅ Clear'}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function total(){return Object.values(S.a).reduce((x,y)=>x+y,0)}
+function crew(){return S.sh?(AU.has('flare')?4:3):6}
+function bar(lbl,v,max,col,txt,low){return`<div class="g ${low?'low':''}"><span>${lbl}</span><div class="bar" role="meter" aria-label="${lbl}" aria-valuenow="${Math.round(v)}" aria-valuemin="0" aria-valuemax="${max}"><i style="width:${clamp(v/max*100,0,100)}%;background:var(${col})"></i></div><span class="val">${txt}</span></div>`}
+const TASKS=[['p','⚡ Power','Tend solar panels and the reactor. Each crew adds power, scaled by sunlight.'],
+['l','💨 Life support','Scrub CO₂ and make oxygen. Each crew adds about 9 oxygen.'],
+['f','🌱 Greenhouse','Grow food. Each crew adds about 8 food.'],
+['s','🧱 Shielding','Pile regolith over the habitat. Each layer cuts radiation 13%.'],
+['c','🔬 Science','Run experiments. Each crew adds 10 mission points and uses 1 power.']];
+function render(){
+ if(!S){app.innerHTML=`<h1>Outpost Zero</h1><p class="mute">Six astronauts, one base, and an Earth that is far away. Every crew hour you spend on one system is an hour you don’t spend on another. Can you keep everyone alive?</p>
+ ${acctHTML()}${mapHTML()}${guideCard()}<h2 style="margin-top:20px">Free play</h2><p><b>Mission length</b> (first two missions): <label><input type="radio" name="n" value="20" checked> Rookie, 20 sols</label> &nbsp; <label><input type="radio" name="n" value="30"> Commander, 30 sols</label></p><div class="grid"><button class="pick" data-k="moon"><b>🌙 Build on the Moon</b><span class="mute">${LOC.moon.blurb}</span></button><button class="pick" data-k="mars"><b>🔴 Build on Mars</b><span class="mute">${LOC.mars.blurb}</span></button><button class="pick" data-k="moon" data-m="flare"><b>☀️ Mission: Flare Week</b><span class="mute">20 sols on the Moon with 7 real solar flares. Shielding and sheltering decide everything.</span></button><button class="pick" data-k="mars" data-m="storm"><b>🌪️ Mission: Storm Season</b><span class="mute">20 sols on Mars with three dust storms. Bank power before each one hits.</span></button></div>
+ ${achHTML()}<div class="card"><h2>How to play</h2><ul><li>Each sol (day), assign your crew to jobs, then press Run this sol.</li><li>Everyone breathes, eats and uses power every sol. Keep oxygen, food and battery above zero.</li><li>Radiation builds up. Past 100 it harms the crew, and only shielding reduces it.</li><li>Check the forecast. Storms and flares can be planned for, but equipment failures are surprises.</li><li>The solar flares are real ones from NASA’s records. When something breaks, how much Earth can help depends on how far away it is.</li><li>A sol is one day on the base.</li><li>Earn badges to unlock perks for your next missions.</li><li>Your crew starts spread thin. Move them to fix whatever is running low.</li></ul></div>`;
+ document.querySelectorAll('.pick').forEach(b=>b.onclick=()=>ask(b.dataset.k,b.dataset.m?20:+document.querySelector('input[name=n]:checked').value,b.dataset.m));document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>playLevel(+b.dataset.i));if($('#og'))$('#og').onclick=()=>showGuide('g');if($('#om'))$('#om').onclick=()=>showGuide('m');return}
+ if(S.over)return end();
+ app.className=(S.tut||S.o.fl===0)?'tut':'';const L=LOC[S.k],left=crew()-total(),f=[0,1,2,3].filter(i=>S.sol+i<=S.N).map(i=>`<div class="${i?'':'now'}">${i?'Sol '+(S.sol+i):'Today'}: ${fc(S.sol+i)}</div>`).join('');
+ const rOn=!S.o.tasks||S.o.tasks.includes('s'),flareNow=S.flares.includes(S.sol),fmt=v=>(v>=0?'+':'')+Math.round(v),pv=(()=>{const a=S.a,g=(14+9*a.p)*solar(S.sol)+10,u=20+3*a.l+3*a.f+a.c;PW=g-u;return `power ${fmt(g-u)}, oxygen ${fmt(9*a.l-11)}, food ${fmt(8*a.f-9)}${rOn?', radiation '+fmt(L.rad*(1-.13*S.lvl)-1.5):''}`})();
+ app.innerHTML=`${S.paused?pauseHTML():''}<div class="top"><div><span class="sol">Sol ${S.sol} of ${S.N}</span> <span class="mute">${L.icon} ${L.name}</span></div><span class="mute">Crew health ${Math.round(S.hp)}%</span> <button class="ghost" id="pz" style="width:auto;padding:6px 12px">⏸ Pause</button></div>
+ ${S.tut?coach():''}<div class="card"><h2>Forecast</h2><div class="fc">${f}</div></div>
+ <div class="card"><h2>Base status</h2>
+ ${bar('⚡ Battery',S.bat,150,'--pow',Math.round(S.bat),S.bat<25)}${bar('💨 Oxygen',S.o2,100,'--o2',Math.round(S.o2),S.o2<25)}${bar('🌱 Food',S.food,100,'--food',Math.round(S.food),S.food<25)}${rOn?bar('☢️ Radiation',S.rad,100,'--rad',Math.round(S.rad)+'/100',S.rad>70)+bar('🧱 Shield',S.lvl*25+S.prog,150,'--hp','Layer '+S.lvl,false):''}
+ ${rOn?'<p class="mute">Radiation is invisible energy from the Sun and space that can damage body cells. Shield layers block it.</p>':''}${S.o.goal?'<p><b>Level goal:</b> earn '+S.o.goal+' science points ('+S.sci+' so far).</p>':''}<p class="mute">Sunlight today: ${Math.round(solar(S.sol)*100)}%. Baseline each sol: oxygen −11, food −9, power −20.</p></div>
+ <div class="card"><h2>Assign your crew <span class="mute">(${left} free)</span></h2>
+ <label class="sh"><input type="checkbox" id="sh" ${S.sh?'checked':''}><span><b>Shelter in the storm room</b><small class="mute" style="display:block">Cuts a solar flare’s radiation by 80%, but only ${AU.has('flare')?4:3} crew can work.${flareNow?' A flare is hitting today.':''}</small></span></label>
+ ${TASKS.filter(t=>!S.o.tasks||S.o.tasks.includes(t[0])).map(t=>`<div class="row"><div><b>${t[1]}</b><small>${t[2]}</small></div><div class="ctl"><button class="step" data-t="${t[0]}" data-d="-1" aria-label="Fewer on ${t[1]}">−</button><b>${S.a[t[0]]}</b><button class="step" data-t="${t[0]}" data-d="1" aria-label="More on ${t[1]}">+</button></div></div>`).join('')}
+ <p id="pv"><b>Expected change this sol:</b> ${pv}. <span class="mute">Surprises not included.</span></p><p class="mute" id="msg">${left<0?'Too many crew assigned. Remove '+(-left)+'.':S.tut&&S.sol==1&&PW<0?'Add crew to Power until the expected power change shows a plus.':S.tut&&S.sol==2&&S.a.c<1?'Add crew to Science to continue.':''}</p>
+ <button class="go" id="go" ${left<0||(S.tut&&((S.sol==1&&PW<0)||(S.sol==2&&S.a.c<1)))?'disabled':''}>Run this sol</button></div>
+ <div class="card log"><h2>Mission log</h2>${S.log.slice(0,6).map(e=>`<p class="${e.c}">${e.t}${e.f?`<em>${e.f}</em>`:''}</p>`).join('')||'<p class="mute">Nothing yet. Make your first call, Commander.</p>'}</div>`;
+ $('#sh').onchange=e=>{S.sh=e.target.checked;render()};
+ document.querySelectorAll('.step').forEach(b=>b.onclick=()=>{const k=b.dataset.t;S.a[k]=Math.max(0,S.a[k]+ +b.dataset.d);if(total()>crew()+3&&b.dataset.d>0)S.a[k]--;render()});
+ $('#go').onclick=adv;$('#pz').onclick=()=>{S.paused=true;render()};if(S.paused){$('#rs').onclick=()=>{S.paused=false;render()};$('#rt').onclick=()=>start(S.k,S.N,S.tut,S.o,S.lv);$('#mm').onclick=()=>{S=null;render()};$('#rs').focus()}}
+function adv(){if(S.paused)return;
+ const a=S.a,n=S.sol,L=LOC[S.k],ev=[],add=(t,c,f)=>ev.push({t:`<b>Sol ${n}.</b> ${t}`,c,f});
+ const sun=solar(n),flare=S.flares.includes(n);
+ const gen=(14+9*a.p)*sun+10,use=20+3*a.l+3*a.f+a.c;
+ S.bat=Math.min(150,S.bat+gen-use);let eff=1;
+ add(`Power ${gen>=use?'+':''}${Math.round(gen-use)} (made ${Math.round(gen)}, used ${use}).`,gen>=use?'good':'bad',sun==0?FACT.dark:(S.k=='mars'&&sun<.5?FACT.dust:''));
+ if(S.bat<=0){S.bat=0;eff=.5;add('Brownout! Life support and greenhouse ran at half power.','bad')}
+ S.o2+=9*a.l*eff-11;S.food+=8*a.f*eff-9;
+ if(S.fails.includes(n)){const moon=S.k=='moon',d=Math.max(2,(a.l>=2?5:moon?8:18)-(AU.has('win')?3:0));S.o2-=d;add(`A CO₂ scrubber failed: −${d} oxygen. ${a.l>=2?'Your life-support crew fixed it fast.':moon?'Earth’s engineers replied in about 3 seconds and talked you through it.':'Earth is 4 to 24 minutes away each way, so help came too late. Mars crews must solve problems alone.'}`,'bad',FACT.scrub)}
+ if(S.hits.includes(n)){if(S.lvl>=3)add('A micrometeorite hit the habitat roof, but your shielding stopped it.','good',FACT.meteor);else{S.o2-=12;S.bat-=10;add('A micrometeorite punctured a panel line: −12 oxygen, −10 battery. Thicker shielding would have stopped it.','bad',FACT.meteor)}}
+ const fe=S.fev[n];let fl=flare?fe.p:0;if(flare&&S.sh)fl*=.2;
+ const rOn=!S.o.tasks||S.o.tasks.includes('s'),dose=rOn?(L.rad+fl)*(1-.13*S.lvl):0;S.rad=rOn?Math.max(0,S.rad+dose-1.5):0;
+ if(rOn)add(`Radiation +${Math.round(dose)}${flare?' (real '+fe.c+' flare from '+fe.d+(S.sh?', crew sheltered':'')+')':''}.`,dose>12?'bad':'',flare?fe.f:'');
+ S.prog+=10*a.s;while(S.prog>=25&&S.lvl<6){S.prog-=25;S.lvl++;add(`Shield layer ${S.lvl} finished. Radiation per sol is now ${Math.round(13*S.lvl)}% lower.`,'good',S.lvl==1?FACT.shield:'')}
+ if(S.lvl>=6)S.prog=0;
+ S.sci+=(AU.has('sci')?12:10)*a.c;S.o2=clamp(S.o2,0,100);S.food=clamp(S.food,0,100);S.bat=Math.max(0,S.bat);
+ let d=0,why=[];if(S.o2<=0){d+=25;why.push('ran out of oxygen')}if(S.food<=0){d+=12;why.push('ran out of food')}if(S.rad>=100){d+=10;why.push('took too much radiation')}
+ if(d){S.hp-=d;add(`Crew health −${d}: the crew ${why.join(' and ')}.`,'bad')}else S.hp=Math.min(100,S.hp+3);
+ if(!S.tut){if(S.bat>=140)unlock('pow');if(S.food>=100)unlock('green');if(flare&&S.sh)unlock('flare');if(S.lvl>=3)unlock('mole');if(S.sci>=100)unlock('sci')}
+ S.log=ev.reverse().concat(S.log);
+ if(S.hp<=0){S.hp=0;S.over={win:false,why:why.join(' and ')}}
+ else if(n>=S.N){if(S.o.goal&&S.sci<S.o.goal)S.over={win:false,goal:1};else{S.over={win:true};unlock(S.tut?'tut':'win')}}
+ else{S.sol++;S.sh=false;let t=total();while(t>6){const k=Object.keys(S.a).find(x=>S.a[x]>0);S.a[k]--;t--}}
+ render();window.scrollTo(0,0)}
+function end(){if(S.tut){const w=S.over.win;if(w)save(0,1);app.innerHTML='<h1>'+(w?'Training complete!':'Training failed')+'</h1><p>'+(w?'You learned the big idea: crew time and power are shared. Every hour on science or the greenhouse is an hour not spent on the panels, and night uses up the battery you saved.':'The base ran out of something. Try again and keep power above zero.')+'</p>'+(w?'<p>🎓 Trainee badge earned: +10 starting battery in every full mission.</p>':'')+achHTML()+(w?'<button class="go" id="qz">🧠 Take the 3-question quiz</button>':'')+'<button class="go" id="again" style="margin-top:8px">'+(w?'Start Level 2':'Try training again')+'</button>';$('#again').onclick=()=>w?playLevel(1):startTut();if($('#qz'))$('#qz').onclick=()=>quiz(0);return}
+ 
+ const w=S.over.win,sols=Math.min(S.sol,S.N),score=sols*20+S.sci+Math.round(S.hp)+(w?200:0);
+ const tips=[];
+ if(S.lvl<3)tips.push('Shielding is slow to build but pays off every sol. Start early, since you can’t build it during a flare.');
+ if(S.k=='moon')tips.push('The lunar night is predictable. Charging the battery to the max before it starts is the winning move.');
+ else tips.push('Mars dust storms are forecast days ahead. Bank power before they arrive. With a 4 to 24 minute radio delay, a Mars crew must fix problems without waiting for Earth.');
+ tips.push('NASA research on astronauts shows bones can lose about 1% of their density per month in space, so real crews exercise about 2 hours a day. Staying alive also means staying healthy.');tips.push('Real mission planners face the same trade-off: crew time, power and mass are always limited, so nothing can be maxed out at once.');
+ const stars=w?(S.hp>=80&&S.rad<70?3:S.hp>=50?2:1):0;if(S.lv!=null&&w&&!S.saved){S.saved=1;if(S.o.fin=='moon')PR.g=1;if(S.o.fin=='mars')PR.m=1;save(S.lv,stars)}
+ app.innerHTML=`<h1>${w?(S.lv!=null?'Level complete!':'Mission success'):'Mission lost'}</h1>${S.lv!=null&&w?'<p style="font-size:2rem;color:var(--pow);margin:0">'+'★'.repeat(stars)+'☆'.repeat(3-stars)+'</p>':''}<p>${w?'All six astronauts survived '+S.N+' sols at '+LOC[S.k].name+'.':S.over.goal?'Everyone survived, but the science goal of '+S.o.goal+' points was missed ('+S.sci+' earned).':'The crew '+S.over.why+' on sol '+S.sol+'.'}</p>
+ <div class="stats"><div><b>${score}</b>Score</div><div><b>${sols}</b>Sols survived</div><div><b>${S.lvl}</b>Shield layers</div><div><b>${S.sci}</b>Science points</div><div><b>${Math.round(S.rad)}</b>Final radiation</div></div>
+ <div class="card"><h2>What to take from this run</h2><ul>${tips.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+ ${achHTML()}<div class="grid">${S.lv!=null&&w&&QZ[S.lv]?'<button class="go" id="qz">🧠 Take the 3-question quiz</button>':''}${S.o.fin&&w?'<button class="go" id="gd">📘 Open the '+(S.o.fin=='moon'?'Beginner’s':'Intermediate')+' Guide</button>':''}${S.lv!=null&&w&&S.lv<LV.length-1?'<button class="ghost" id="nx">Next level</button>':''}<button class="${S.lv!=null&&w?'ghost':'go'}" id="again">${S.lv!=null?'Retry level':'Try again'}</button><button class="ghost" id="mp">Main menu</button></div>`;
+ $('#again').onclick=()=>S.lv!=null?start(S.k,S.N,false,S.o,S.lv):(S=null,render());$('#mp').onclick=()=>{S=null;render()};if($('#nx'))$('#nx').onclick=()=>playLevel(S.lv+1);if($('#qz'))$('#qz').onclick=()=>quiz(S.lv);if($('#gd'))$('#gd').onclick=()=>showGuide(S.o.fin=='mars'?'m':'g')}
+let TT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('show'),4500)}
+const cv=$('#scene'),cx=cv.getContext&&cv.getContext('2d'),RM=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;let T=0;
+const STR=Array.from({length:70},()=>[Math.random()*800,Math.random()*110,Math.random()*6]),DUST=Array.from({length:60},()=>[Math.random()*800,Math.random()*200,1+Math.random()*3]);
+function scene(){if(!RM&&!(S&&S.paused))T+=.02;const W=800,H=200,mars=S&&S.k=='mars',sun=S?solar(S.sol):1,fl=S&&!S.over&&S.flares.includes(S.sol),storm=mars&&sun<.5,lvl=S?S.lvl:0,p=S?S.a.p:1;
+ const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,mars?(storm?'#6b3d2c':'#4a3040'):sun?'#070a14':'#02030a');g.addColorStop(1,mars?(storm?'#b8693f':'#d08a5e'):'#101830');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ cx.fillStyle='#fff';for(const s of STR){cx.globalAlpha=mars?.2:.5+.5*Math.sin(T*2+s[2]);cx.fillRect(s[0],s[1],1.5,1.5)}cx.globalAlpha=1;
+ if(sun>0||fl){const R=fl?90+8*Math.sin(T*8):40,r=cx.createRadialGradient(660,45,2,660,45,R);r.addColorStop(0,'#fff0b0');r.addColorStop(1,'rgba(255,200,80,0)');cx.fillStyle=r;cx.beginPath();cx.arc(660,45,R,0,7);cx.fill()}
+ cx.fillStyle='#4aa3ff';cx.beginPath();cx.arc(120,42,mars?3:11,0,7);cx.fill();
+ cx.fillStyle=mars?'#8e4c30':'#6d7283';cx.beginPath();cx.moveTo(0,H);cx.lineTo(0,150);for(let x=0;x<=W;x+=20)cx.lineTo(x,150+Math.sin(x*.02)*8);cx.lineTo(W,H);cx.fill();
+ cx.fillStyle=mars?'#6e3a24':'#555a69';cx.fillRect(0,172,W,28);
+ for(let i=lvl;i>=1;i--){cx.fillStyle=mars?'rgba(170,98,64,.9)':'rgba(150,156,174,.9)';cx.strokeStyle='rgba(0,0,0,.25)';cx.beginPath();cx.arc(400,172,50+i*8,Math.PI,0);cx.fill();cx.stroke()}
+ cx.fillStyle='#dfe6f5';cx.beginPath();cx.arc(400,172,50,Math.PI,0);cx.fill();
+ const lit=!S||S.bat>0;for(let i=0;i<3;i++){cx.fillStyle=lit?'#ffc95a':'#2a2f3d';cx.fillRect(372+i*22,150,12,8)}
+ for(let i=0;i<3;i++){cx.fillStyle='#8890a8';cx.fillRect(139+i*60,162,3,12);cx.fillStyle='rgba(255,191,71,'+(.25+.75*sun*(p?1:.4))+')';cx.fillRect(120+i*60,156,40,7)}
+ cx.strokeStyle='#cfd6e6';cx.lineWidth=2;cx.beginPath();cx.moveTo(480,172);cx.lineTo(480,122);cx.stroke();cx.lineWidth=1;
+ const pr=(T*(mars?.06:.7))%1;cx.fillStyle='#8fdc6e';cx.beginPath();cx.arc(480-360*pr,122-80*pr,3,0,7);cx.fill();
+ for(let i=0;i<6;i++){const x=520+i*18+Math.sin(T*1.5+i)*8;cx.fillStyle='#ff9b54';cx.fillRect(x,160,6,11);cx.fillStyle='#fff';cx.beginPath();cx.arc(x+3,157,3.5,0,7);cx.fill()}
+ if(fl){cx.fillStyle='rgba(255,90,60,'+(.1+.08*Math.sin(T*8))+')';cx.fillRect(0,0,W,H);cx.strokeStyle='rgba(255,140,90,.6)';for(let j=0;j<24;j++){const x=(j*37+T*120)%W;cx.beginPath();cx.moveTo(x+60,0);cx.lineTo(x,H);cx.stroke()}if(S.sh){cx.fillStyle='#fff';cx.font='16px sans-serif';cx.fillText('🛡️ Crew sheltering',330,24)}}
+ if(storm){cx.fillStyle='rgba(120,70,40,.3)';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(235,175,125,.6)';for(const d of DUST)cx.fillRect((d[0]+T*70*d[2])%W,d[1],d[2]*3,1.5)}
+ if(sun==0&&!mars){cx.fillStyle='#fff';cx.font='14px sans-serif';cx.fillText('🌑 Lunar night',20,190)}}
+function loop(){scene();requestAnimationFrame(loop)}
+document.addEventListener('keydown',e=>{if(e.key=='Escape'&&S&&!S.over){S.paused=!S.paused;render()}});
+if(cx)loop();
+render();initAcct();
+</script></body></html>
